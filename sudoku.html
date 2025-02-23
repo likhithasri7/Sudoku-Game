@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(9, 40px);
+            grid-gap: 2px;
+            margin: 20px;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            font-size: 18px;
+            border: 1px solid black;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Sudoku Solver</h2>
+    <div class="grid" id="sudoku-grid"></div>
+    <div class="buttons">
+        <button onclick="solveSudoku()">Solve</button>
+        <button onclick="clearGrid()">Clear</button>
+    </div>
+    
+    <script>
+        const grid = document.getElementById("sudoku-grid");
+        let board = Array(9).fill().map(() => Array(9).fill(0));
+        
+        function createGrid() {
+            for (let i = 0; i < 81; i++) {
+                let input = document.createElement("input");
+                input.type = "text";
+                input.classList.add("cell");
+                input.id = `cell-${Math.floor(i / 9)}-${i % 9}`;
+                input.maxLength = 1;
+                input.oninput = function () {
+                    let val = parseInt(this.value);
+                    if (isNaN(val) || val < 1 || val > 9) {
+                        this.value = "";
+                    } else {
+                        board[Math.floor(i / 9)][i % 9] = val;
+                    }
+                };
+                grid.appendChild(input);
+            }
+        }
+        
+        function isSafe(board, row, col, num) {
+            for (let x = 0; x < 9; x++) {
+                if (board[row][x] === num || board[x][col] === num || 
+                    board[3 * Math.floor(row / 3) + Math.floor(x / 3)][3 * Math.floor(col / 3) + x % 3] === num) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        function isValidBoard(board) {
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    let num = board[row][col];
+                    if (num !== 0) {
+                        board[row][col] = 0; 
+                        if (!isSafe(board, row, col, num)) {
+                            board[row][col] = num;
+                            return false;
+                        }
+                        board[row][col] = num;
+                    }
+                }
+            }
+            return true;
+        }
+        
+        function solveSudokuUtil(board) {
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (board[row][col] === 0) {
+                        for (let num = 1; num <= 9; num++) {
+                            if (isSafe(board, row, col, num)) {
+                                board[row][col] = num;
+                                if (solveSudokuUtil(board)) return true;
+                                board[row][col] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        
+        function solveSudoku() {
+            let inputs = document.getElementsByClassName("cell");
+            for (let i = 0; i < 81; i++) {
+                let row = Math.floor(i / 9);
+                let col = i % 9;
+                board[row][col] = inputs[i].value ? parseInt(inputs[i].value) : 0;
+            }
+            
+            if (!isValidBoard(board)) {
+                alert("Invalid Sudoku input! Please check the numbers entered.");
+                return;
+            }
+            
+            if (solveSudokuUtil(board)) {
+                for (let i = 0; i < 81; i++) {
+                    let row = Math.floor(i / 9);
+                    let col = i % 9;
+                    inputs[i].value = board[row][col];
+                }
+            } else {
+                alert("No solution exists!");
+            }
+        }
+        
+        function clearGrid() {
+            let inputs = document.getElementsByClassName("cell");
+            for (let i = 0; i < 81; i++) {
+                inputs[i].value = "";
+            }
+            board = Array(9).fill().map(() => Array(9).fill(0));
+        }
+        
+        createGrid();
+    </script>
+</body>
+</html>
